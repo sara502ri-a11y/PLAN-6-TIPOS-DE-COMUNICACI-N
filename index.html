@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan Diario de Clase - Colegio Montano</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            montano: {
+              primary: '#1F3C88',
+              secondary: '#3F72AF',
+              white: '#FFFFFF',
+              accent: '#F2C94C',
+              surface: '#F6F8FC',
+              border: '#D6E0F0'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Estilos base institucionales */
+    :root {
+      --azul-institucional: #1F3C88;
+      --azul-secundario: #3F72AF;
+      --blanco: #FFFFFF;
+      --amarillo-institucional: #F2C94C;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F4F7FB;
+      color: #1E293B;
+    }
+
+    /* Indicador visual discreto para campos editables */
+    [contenteditable="true"] {
+      outline: none;
+      border-radius: 0.375rem;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    [contenteditable="true"]:hover {
+      background-color: rgba(63, 114, 175, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(63, 114, 175, 0.35);
+    }
+
+    [contenteditable="true"]:focus {
+      background-color: #FFFFFF;
+      box-shadow: 0 0 0 2px #3F72AF;
+    }
+
+    /* Estilo de pestañas activas */
+    .tab-btn.active {
+      background-color: #1F3C88;
+      color: #FFFFFF;
+      border-color: #1F3C88;
+    }
+
+    .tab-btn.active .time-badge {
+      background-color: #F2C94C;
+      color: #1F3C88;
+    }
+
+    /* Estilos específicos de impresión */
+    @media print {
+      body {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-size: 10.5pt !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .print-only {
+        display: block !important;
+      }
+
+      /* Mostrar todos los momentos didácticos al imprimir aunque en pantalla estén en pestañas */
+      .moment-panel {
+        display: block !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 1rem !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none !important;
+      }
+
+      .card-section {
+        box-shadow: none !important;
+        border: 1px solid #CBD5E1 !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 0.9rem !important;
+      }
+
+      [contenteditable="true"] {
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+
+      header.institutional-header {
+        background-color: #1F3C88 !important;
+        color: #FFFFFF !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .badge-print {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <!-- BARRA SUPERIOR DE HERRAMIENTAS INTERACTIVAS (No se imprime) -->
+  <div class="no-print sticky top-0 z-40 bg-white border-b border-montano-border shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-medium text-montano-primary">
+        <span class="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-emerald-500" id="saveStatusDot"></span>
+        <span id="saveStatusText">Edición activa • Guardado automático en navegador</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="manualSave()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-montano-secondary text-white hover:bg-montano-primary transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Guardar
+        </button>
+
+        <button type="button" onclick="exportHTML()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-montano-accent text-montano-primary hover:brightness-95 transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
+          Descargar HTML
+        </button>
+
+        <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-montano-primary text-white hover:bg-montano-secondary transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Imprimir / PDF
+        </button>
+
+        <button type="button" onclick="openResetModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Reiniciar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-6xl mx-auto px-4 pt-6 space-y-6" id="planDocument">
+
+    <!-- 1. ENCABEZADO INSTITUCIONAL Y DATOS GENERALES EDITABLES -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border overflow-hidden">
+      <header class="institutional-header bg-montano-primary text-white px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b-4 border-montano-accent">
+        <div class="flex items-center gap-4">
+          <!-- Emblema SVG Institucional -->
+          <div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+            <svg class="w-9 h-9 text-montano-primary" viewBox="0 0 40 40" fill="none">
+              <path d="M20 4L5 11V21C5 30.2 11.4 38.7 20 40C28.6 38.7 35 30.2 35 21V11L20 4Z" fill="#1F3C88"/>
+              <path d="M12 25L16.5 16L20 22L23.5 15L28 25H12Z" fill="#F2C94C"/>
+              <circle cx="20" cy="11" r="2" fill="#FFFFFF"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold tracking-widest uppercase text-montano-accent">Modelo Pedagógico por Competencias</p>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">COLEGIO MONTANO</h1>
+            <p class="text-sm text-blue-100 font-medium">Planificación Diaria de Clase • Modalidad Presencial</p>
+          </div>
+        </div>
+
+        <!-- Indicador de Duración Total Verificada (50 minutos exactos) -->
+        <div class="bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-left md:text-right">
+          <div class="flex items-center md:justify-end gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-montano-accent"></span>
+            <span class="text-xs uppercase tracking-wider font-semibold text-blue-100">Duración Total de Sesión</span>
+          </div>
+          <div class="text-2xl font-extrabold text-montano-accent mt-0.5">
+            <span id="headerTotalMinutes">50</span> minutos
+          </div>
+          <p class="text-[11px] text-blue-100 font-medium">IM 8' + TP 15' + TC 20' + P 7' = 50 min</p>
+        </div>
+      </header>
+
+      <!-- Grid de Datos Generales Editables -->
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+            <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+            1. Datos Generales de la Clase
+          </h2>
+          <span class="no-print text-xs text-slate-500">Haz clic sobre cualquier dato para editarlo</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Colegio</span>
+            <div contenteditable="true" data-field="colegio" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Montano</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Modalidad</span>
+            <div contenteditable="true" data-field="modalidad" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Presencial</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border lg:col-span-2">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Materia / Asignatura</span>
+            <div contenteditable="true" data-field="materia" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Comunicación y Lenguaje</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Grado</span>
+            <div contenteditable="true" data-field="grado" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Tercero primaria</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border lg:col-span-2">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Tema</span>
+            <div contenteditable="true" data-field="tema" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Tipos de comunicación (verbal oral, verbal escrita y no verbal)</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Unidad / Plan N.°</span>
+            <div class="flex items-center gap-1 mt-0.5 text-sm font-semibold text-slate-900">
+              <span>Unidad</span>
+              <span contenteditable="true" data-field="unidad" class="px-1">1</span>
+              <span>• Plan #</span>
+              <span contenteditable="true" data-field="planNum" class="px-1">6</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Fecha</span>
+            <div contenteditable="true" data-field="fecha" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Enero 2027</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-montano-surface border border-montano-border">
+            <span class="block text-[11px] font-bold uppercase text-montano-secondary">Docente</span>
+            <div contenteditable="true" data-field="docente" class="text-sm font-semibold text-slate-900 mt-0.5 px-1">Sara Rivera</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. COMPETENCIA Y LOGRO DE APRENDIZAJE -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2 mb-4">
+        <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+        2. Competencia y Logro de Aprendizaje
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-xl border-l-4 border-montano-primary bg-montano-surface p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-montano-primary text-white">Competencia de Aprendizaje</span>
+          </div>
+          <p contenteditable="true" data-field="competencia" class="text-sm leading-relaxed text-slate-800 p-1">
+            Aplica las distintas formas de comunicación (verbal oral, verbal escrita y no verbal) en situaciones cotidianas del entorno escolar y familiar, analizando la intención del mensaje para interactuar de manera clara, respetuosa y efectiva.
+          </p>
+        </div>
+
+        <div class="rounded-xl border-l-4 border-montano-accent bg-montano-surface p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-montano-accent text-montano-primary">Logro de Aprendizaje (50 min)</span>
+          </div>
+          <p contenteditable="true" data-field="logro" class="text-sm leading-relaxed text-slate-800 p-1">
+            Al finalizar los 50 minutos de clase, el estudiante clasifica e interpreta mensajes verbales y no verbales en situaciones cotidianas, produciendo en equipo una solución comunicativa creativa y coherente ante un reto del aula.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. COMPETENCIAS A DESARROLLAR (CLAVE Y BLANDAS) -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+          <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+          3. Competencias a Desarrollar en la Sesión
+        </h2>
+        <span class="no-print text-xs text-slate-500">Marca las competencias priorizadas y edita su evidencia</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Competencias Clave -->
+        <div class="rounded-xl border border-montano-border p-4 bg-montano-surface/60">
+          <h3 class="text-sm font-bold text-montano-primary uppercase tracking-wide mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-montano-primary text-white inline-flex items-center justify-center text-xs font-bold">C</span>
+            Competencias Clave
+          </h3>
+          <div class="space-y-2.5" id="claveCompetenciesList">
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_clave_1" class="mt-1 accent-[#1F3C88] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-primary">Pensamiento crítico:</span>
+                <span contenteditable="true" data-field="comp_clave_1_desc" class="text-slate-700 px-1">Analiza qué tipo de comunicación es más efectivo según el contexto, el lugar y el receptor del mensaje.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_clave_2" class="mt-1 accent-[#1F3C88] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-primary">Creatividad:</span>
+                <span contenteditable="true" data-field="comp_clave_2_desc" class="text-slate-700 px-1">Diseña símbolos visuales, gestos y mensajes escritos originales para resolver un reto comunicativo del aula.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_clave_3" class="mt-1 accent-[#1F3C88] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-primary">Resolución de problemas:</span>
+                <span contenteditable="true" data-field="comp_clave_3_desc" class="text-slate-700 px-1">Adapta el canal comunicativo cuando existe una barrera (ruido, silencio obligado o distancia) para hacerse entender.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_clave_4" class="mt-1 accent-[#1F3C88] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-primary">Trabajo en equipo:</span>
+                <span contenteditable="true" data-field="comp_clave_4_desc" class="text-slate-700 px-1">Cumple un rol asignado dentro de su grupo y acuerda un mensaje común integrando las ideas de todos.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Competencias Blandas -->
+        <div class="rounded-xl border border-montano-border p-4 bg-montano-surface/60">
+          <h3 class="text-sm font-bold text-montano-secondary uppercase tracking-wide mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-montano-secondary text-white inline-flex items-center justify-center text-xs font-bold">B</span>
+            Competencias Blandas
+          </h3>
+          <div class="space-y-2.5" id="blandasCompetenciesList">
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_blanda_1" class="mt-1 accent-[#3F72AF] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-secondary">Inteligencia emocional:</span>
+                <span contenteditable="true" data-field="comp_blanda_1_desc" class="text-slate-700 px-1">Reconoce emociones e intenciones en los demás a través del lenguaje gestual y las expresiones faciales.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_blanda_2" class="mt-1 accent-[#3F72AF] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-secondary">Toma de decisiones:</span>
+                <span contenteditable="true" data-field="comp_blanda_2_desc" class="text-slate-700 px-1">Selecciona de forma justificada entre comunicación oral, escrita o no verbal según la necesidad de cada caso.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_blanda_3" class="mt-1 accent-[#3F72AF] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-secondary">Comunicación:</span>
+                <span contenteditable="true" data-field="comp_blanda_3_desc" class="text-slate-700 px-1">Expresa sus ideas con claridad, respeto y coherencia tanto de forma oral como escrita y corporal.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-2.5 rounded-lg bg-white border border-montano-border cursor-pointer">
+              <input type="checkbox" checked data-check="comp_blanda_4" class="mt-1 accent-[#3F72AF] w-4 h-4 rounded" />
+              <div class="flex-1 text-sm">
+                <span class="font-bold text-montano-secondary">Flexibilidad:</span>
+                <span contenteditable="true" data-field="comp_blanda_4_desc" class="text-slate-700 px-1">Ajusta su forma de transmitir un mensaje cuando observa que su interlocutor no logra comprenderlo.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. HÁBITOS DEL MODELO FORMATIVO MONTANO -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+          <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+          4. Hábitos del Modelo Formativo Montano
+        </h2>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-montano-accent/30 text-montano-primary">
+          Formación del carácter en acción
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-7 h-7 rounded-lg bg-montano-accent text-montano-primary font-extrabold text-xs flex items-center justify-center">H5</span>
+            <h3 contenteditable="true" data-field="habito1_titulo" class="text-sm font-bold text-montano-primary">5. Buscar primero entender, luego ser entendido</h3>
+          </div>
+          <p contenteditable="true" data-field="habito1_accion" class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <strong>Acción concreta:</strong> Durante la dinámica inicial (IM) y el diálogo en equipos (TC), los estudiantes observan con atención los gestos, señales y palabras de sus compañeros antes de responder o proponer su propia idea.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-7 h-7 rounded-lg bg-montano-accent text-montano-primary font-extrabold text-xs flex items-center justify-center">H2</span>
+            <h3 contenteditable="true" data-field="habito2_titulo" class="text-sm font-bold text-montano-primary">2. Comenzar con un fin en mente</h3>
+          </div>
+          <p contenteditable="true" data-field="habito2_accion" class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <strong>Acción concreta:</strong> En el Trabajo Personal (TP), antes de dibujar su señal o redactar su respuesta, cada alumno identifica qué necesita lograr con su mensaje y quién lo va a leer u observar.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-7 h-7 rounded-lg bg-montano-accent text-montano-primary font-extrabold text-xs flex items-center justify-center">H6</span>
+            <h3 contenteditable="true" data-field="habito3_titulo" class="text-sm font-bold text-montano-primary">6. Sinergizar</h3>
+          </div>
+          <p contenteditable="true" data-field="habito3_accion" class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <strong>Acción concreta:</strong> En el Trabajo Cooperativo (TC), cada integrante aporta desde su rol (dibujo, redacción, dramatización y coordinación) para construir un Mini-Mural más claro que el que harían de forma aislada.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SECUENCIA DIDÁCTICA INTERACTIVA IM – TP – TC – P (50 MINUTOS EXACTOS) -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+            <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+            5. Secuencia Didáctica Obligatoria (IM – TP – TC – P)
+          </h2>
+          <p class="text-xs text-slate-600 mt-0.5">Distribución exacta verificada: <strong id="sequenceSumLabel" class="text-montano-primary">50 minutos totales</strong> (al imprimir se muestran los 4 momentos completos).</p>
+        </div>
+
+        <!-- Barra visual de proporción de tiempo -->
+        <div class="w-full md:w-72">
+          <div class="flex justify-between text-[11px] font-bold text-montano-primary mb-1">
+            <span>IM 8'</span>
+            <span>TP 15'</span>
+            <span>TC 20'</span>
+            <span>P 7'</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden flex">
+            <div style="width: 16%" class="bg-montano-accent" title="IM: 8 min (16%)"></div>
+            <div style="width: 30%" class="bg-montano-secondary" title="TP: 15 min (30%)"></div>
+            <div style="width: 40%" class="bg-montano-primary" title="TC: 20 min (40%)"></div>
+            <div style="width: 14%" class="bg-slate-600" title="P: 7 min (14%)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Navegación por Pestañas (Solo en pantalla) -->
+      <div class="no-print flex flex-wrap gap-2 mb-5 pb-3 border-b border-montano-border" role="tablist">
+        <button type="button" onclick="selectMoment('IM')" id="tab-IM" class="tab-btn active inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-montano-border text-xs sm:text-sm font-bold text-montano-primary bg-montano-surface hover:bg-montano-secondary hover:text-white transition cursor-pointer">
+          <span>IM • Introducción Motivante</span>
+          <span class="time-badge px-2 py-0.5 rounded-md text-xs font-extrabold bg-montano-accent text-montano-primary">8 min</span>
+        </button>
+
+        <button type="button" onclick="selectMoment('TP')" id="tab-TP" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-montano-border text-xs sm:text-sm font-bold text-montano-primary bg-montano-surface hover:bg-montano-secondary hover:text-white transition cursor-pointer">
+          <span>TP • Trabajo Personal</span>
+          <span class="time-badge px-2 py-0.5 rounded-md text-xs font-extrabold bg-montano-accent text-montano-primary">15 min</span>
+        </button>
+
+        <button type="button" onclick="selectMoment('TC')" id="tab-TC" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-montano-border text-xs sm:text-sm font-bold text-montano-primary bg-montano-surface hover:bg-montano-secondary hover:text-white transition cursor-pointer">
+          <span>TC • Trabajo Cooperativo</span>
+          <span class="time-badge px-2 py-0.5 rounded-md text-xs font-extrabold bg-montano-accent text-montano-primary">20 min</span>
+        </button>
+
+        <button type="button" onclick="selectMoment('P')" id="tab-P" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-montano-border text-xs sm:text-sm font-bold text-montano-primary bg-montano-surface hover:bg-montano-secondary hover:text-white transition cursor-pointer">
+          <span>P • Plenaria</span>
+          <span class="time-badge px-2 py-0.5 rounded-md text-xs font-extrabold bg-montano-accent text-montano-primary">7 min</span>
+        </button>
+
+        <button type="button" onclick="selectMoment('ALL')" id="tab-ALL" class="tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-montano-secondary text-xs sm:text-sm font-bold text-montano-secondary bg-white hover:bg-montano-secondary hover:text-white transition cursor-pointer ml-auto">
+          <span>Ver los 4 momentos</span>
+        </button>
+      </div>
+
+      <!-- PANELES DE LOS 4 MOMENTOS DIDÁCTICOS -->
+      <div class="space-y-5">
+
+        <!-- MOMENTO 1: IM (8 MINUTOS) -->
+        <article id="panel-IM" class="moment-panel rounded-2xl border-2 border-montano-secondary/40 bg-montano-surface/50 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-montano-border">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded-lg bg-montano-primary text-white font-extrabold text-sm">IM</span>
+              <div>
+                <h3 class="text-base font-bold text-montano-primary">Introducción Motivante</h3>
+                <p class="text-xs text-slate-600">Activación de saberes previos, curiosidad y situación problema</p>
+              </div>
+            </div>
+            <span class="badge-print px-3 py-1 rounded-full bg-montano-accent text-montano-primary font-extrabold text-xs sm:text-sm">
+              Duración: 8 minutos exactos
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Nombre de la actividad</span>
+              <p contenteditable="true" data-field="im_nombre" class="font-bold text-slate-900">«El mensaje misterioso sin palabras»</p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Propósito</span>
+              <p contenteditable="true" data-field="im_proposito" class="text-slate-700 leading-relaxed">
+                Despertar la curiosidad de los estudiantes e identificar sus conocimientos previos sobre las distintas formas en que las personas transmiten mensajes (palabras habladas, escritas, gestos, sonidos e imágenes) a partir de una situación cotidiana del colegio.
+              </p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Distribución de los 8 minutos</span>
+              <ul contenteditable="true" data-field="im_tiempos" class="list-disc list-inside text-slate-700 space-y-1">
+                <li><strong>Minutos 1–2 (2 min):</strong> Reto mudo de bienvenida mediante mímica y señales visuales.</li>
+                <li><strong>Minutos 3–6 (4 min):</strong> Clasificación rápida en pizarra de 4 tarjetas cotidianas y preguntas generadoras.</li>
+                <li><strong>Minutos 7–8 (2 min):</strong> Planteamiento de la situación problema del recreo.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Instrucciones paso a paso</span>
+              <ol contenteditable="true" data-field="im_pasos" class="list-decimal list-inside text-slate-700 space-y-1.5 leading-relaxed">
+                <li><strong>Paso 1:</strong> La docente entra al aula sin hablar y comunica 3 acciones únicamente con gestos (pedir silencio, saludar con alegría y señalar que saquen su cuaderno).</li>
+                <li><strong>Paso 2:</strong> Muestra 4 tarjetas grandes: <em>a)</em> una nota escrita en papel, <em>b)</em> el sonido del timbre escolar, <em>c)</em> una señal de «No correr» y <em>d)</em> dos niños conversando. Pregunta: <em>«¿Cómo entendieron lo que quise decir si no usé mi voz? ¿En qué se diferencian estas 4 formas de avisar algo?»</em></li>
+                <li><strong>Paso 3 (Situación problema):</strong> Plantea el reto: <em>«Imaginen que hoy en el recreo nadie pudiera hablar ni gritar: ¿cómo avisarían a un amigo que viene una pelota o cómo pedirían turno en el juego?»</em> Conecta sus respuestas con los tipos de comunicación.</li>
+              </ol>
+
+              <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div>
+                  <span class="font-bold text-montano-primary block">Recursos:</span>
+                  <span contenteditable="true" data-field="im_recursos" class="text-slate-700">4 tarjetas didácticas ilustradas, pizarra y marcadores.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Evidencia (Diagnóstica):</span>
+                  <span contenteditable="true" data-field="im_evidencia" class="text-slate-700">Respuestas orales e identificación inicial de mensajes verbales y no verbales.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Hábito Montano:</span>
+                  <span contenteditable="true" data-field="im_habito" class="text-slate-700">Hábito 5: Buscar primero entender (observar con atención antes de hablar).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- MOMENTO 2: TP (15 MINUTOS) -->
+        <article id="panel-TP" class="moment-panel hidden rounded-2xl border-2 border-montano-secondary/40 bg-montano-surface/50 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-montano-border">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded-lg bg-montano-secondary text-white font-extrabold text-sm">TP</span>
+              <div>
+                <h3 class="text-base font-bold text-montano-primary">Trabajo Personal</h3>
+                <p class="text-xs text-slate-600">Construcción individual, análisis de casos y producción propia</p>
+              </div>
+            </div>
+            <span class="badge-print px-3 py-1 rounded-full bg-montano-accent text-montano-primary font-extrabold text-xs sm:text-sm">
+              Duración: 15 minutos exactos
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Nombre de la actividad</span>
+              <p contenteditable="true" data-field="tp_nombre" class="font-bold text-slate-900">«Detective de mensajes en mi entorno»</p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Propósito</span>
+              <p contenteditable="true" data-field="tp_proposito" class="text-slate-700 leading-relaxed">
+                Que cada estudiante analice situaciones reales de comunicación, clasifique si corresponden a comunicación verbal (oral o escrita) o no verbal (gestual, visual o sonora), justifique su utilidad y transforme un mensaje oral en una señal visual clara.
+              </p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Distribución de los 15 minutos</span>
+              <ul contenteditable="true" data-field="tp_tiempos" class="list-disc list-inside text-slate-700 space-y-1">
+                <li><strong>Minutos 1–3 (3 min):</strong> Lectura comprensiva de la guía impresa y modelaje de 1 ejemplo en pizarra.</li>
+                <li><strong>Minutos 4–12 (9 min):</strong> Análisis individual de 5 casos cotidianos y creación de una señal visual original.</li>
+                <li><strong>Minutos 13–15 (3 min):</strong> Autoverificación individual con lista de chequeo al pie de la hoja.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Instrucciones paso a paso</span>
+              <ol contenteditable="true" data-field="tp_pasos" class="list-decimal list-inside text-slate-700 space-y-1.5 leading-relaxed">
+                <li><strong>Paso 1:</strong> Cada estudiante recibe la hoja de trabajo impresa <em>«Detective de mensajes»</em> con un mapa conceptual breve de apoyo (Verbal: oral/escrita; No verbal: gestos, imágenes/señales, sonidos).</li>
+                <li><strong>Paso 2:</strong> Lee 5 situaciones cotidianas (ej. un mensaje de texto de mamá, la luz roja del semáforo, un aplauso de felicitación, una exposición oral y una carta de cumpleaños), clasifica cada una y escribe en una oración <em>por qué</em> ese canal es útil en esa situación.</li>
+                <li><strong>Paso 3 (Creación):</strong> Transforma la frase oral <em>«Por favor, deposita la basura en su lugar»</em> en un ícono o señal visual sin palabras (comunicación no verbal visual) para colocar en el aula.</li>
+              </ol>
+
+              <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div>
+                  <span class="font-bold text-montano-primary block">Recursos:</span>
+                  <span contenteditable="true" data-field="tp_recursos" class="text-slate-700">Hoja de trabajo impresa, lápiz, crayones y cuaderno.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Producto individual:</span>
+                  <span contenteditable="true" data-field="tp_producto" class="text-slate-700">Tabla de 5 casos analizados + boceto de señal visual con autoverificación.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Criterios de seguimiento:</span>
+                  <span contenteditable="true" data-field="tp_criterios" class="text-slate-700">Clasificación sin copia mecánica, justificación coherente y claridad del dibujo.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- MOMENTO 3: TC (20 MINUTOS) -->
+        <article id="panel-TC" class="moment-panel hidden rounded-2xl border-2 border-montano-secondary/40 bg-montano-surface/50 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-montano-border">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded-lg bg-montano-primary text-white font-extrabold text-sm">TC</span>
+              <div>
+                <h3 class="text-base font-bold text-montano-primary">Trabajo Cooperativo</h3>
+                <p class="text-xs text-slate-600">Equipos asignados por el docente, roles definidos y resolución de caso</p>
+              </div>
+            </div>
+            <span class="badge-print px-3 py-1 rounded-full bg-montano-accent text-montano-primary font-extrabold text-xs sm:text-sm">
+              Duración: 20 minutos exactos
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Nombre de la actividad</span>
+              <p contenteditable="true" data-field="tc_nombre" class="font-bold text-slate-900">«Misión: Comunicar sin barreras»</p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Propósito</span>
+              <p contenteditable="true" data-field="tc_proposito" class="text-slate-700 leading-relaxed">
+                Resolver en equipos heterogéneos un reto comunicativo real de la vida escolar combinando tres canales distintos (verbal escrito, no verbal visual y no verbal gestual), fomentando la sinergia, la toma de decisiones y la participación equitativa.
+              </p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Organización y Roles (Equipos asignados por docente)</span>
+              <ul contenteditable="true" data-field="tc_roles" class="list-disc list-inside text-slate-700 space-y-1">
+                <li><strong>1. Coordinador/a de tiempo y orden:</strong> Vela porque todos opinen y se cumpla el tiempo de cada fase.</li>
+                <li><strong>2. Redactor/a del mensaje escrito:</strong> Escribe la frase verbal escrita clara, breve y sin faltas de ortografía.</li>
+                <li><strong>3. Creativo/a visual:</strong> Diseña e ilustra el símbolo o ícono no verbal en la cartulina.</li>
+                <li><strong>4. Vocero/a escénico/a:</strong> Representa el gesto/mímica del mensaje y presenta el mural ante otro equipo.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Instrucciones y Distribución (20 minutos)</span>
+              <ol contenteditable="true" data-field="tc_pasos" class="list-decimal list-inside text-slate-700 space-y-1.5 leading-relaxed">
+                <li><strong>Minutos 1–3 (3 min):</strong> La docente organiza equipos de 4 integrantes (no por afinidad), entrega las tarjetas de rol y asigna 1 caso real por grupo (ej. <em>Caso A: Pedir silencio en la biblioteca sin gritar; Caso B: Recordar el lavado de manos antes de refaccionar; Caso C: Dar la bienvenida a un estudiante nuevo que aún no habla español</em>).</li>
+                <li><strong>Minutos 4–15 (12 min):</strong> El equipo analiza su caso y elabora su <strong>«Mini-Mural Comunicativo»</strong> en cartulina dividida en 3 zonas: <em>a)</em> Mensaje verbal escrito corto, <em>b)</em> Símbolo no verbal visual, y <em>c)</em> Ensayo del gesto corporal que lo acompaña.</li>
+                <li><strong>Minutos 16–20 (5 min):</strong> Intercambio cruzado entre parejas de equipos: el vocero muestra primero el gesto y el dibujo para que el equipo vecino adivine el mensaje antes de leer el texto escrito.</li>
+              </ol>
+
+              <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div>
+                  <span class="font-bold text-montano-primary block">Recursos:</span>
+                  <span contenteditable="true" data-field="tc_recursos" class="text-slate-700">Tarjetas de casos, tarjetas de roles, cartulinas media carta y marcadores.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Producto colectivo:</span>
+                  <span contenteditable="true" data-field="tc_producto" class="text-slate-700">Mini-Mural Comunicativo de 3 canales + representación gestual del caso.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Hábito Montano:</span>
+                  <span contenteditable="true" data-field="tc_habito" class="text-slate-700">Hábito 6: Sinergizar (unir talentos distintos para un producto común).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- MOMENTO 4: P (7 MINUTOS) -->
+        <article id="panel-P" class="moment-panel hidden rounded-2xl border-2 border-montano-secondary/40 bg-montano-surface/50 p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-montano-border">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded-lg bg-slate-800 text-white font-extrabold text-sm">P</span>
+              <div>
+                <h3 class="text-base font-bold text-montano-primary">Plenaria y Cierre</h3>
+                <p class="text-xs text-slate-600">Socialización, conclusiones, retroalimentación y evaluación de salida</p>
+              </div>
+            </div>
+            <span class="badge-print px-3 py-1 rounded-full bg-montano-accent text-montano-primary font-extrabold text-xs sm:text-sm">
+              Duración: 7 minutos exactos
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Nombre de la actividad</span>
+              <p contenteditable="true" data-field="p_nombre" class="font-bold text-slate-900">«Galería viva y Ticket de salida 3-2-1»</p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Propósito</span>
+              <p contenteditable="true" data-field="p_proposito" class="text-slate-700 leading-relaxed">
+                Socializar los aprendizajes construidos, contrastar en qué momentos conviene utilizar cada tipo de comunicación, brindar retroalimentación formativa y verificar el alcance individual del logro de aprendizaje mediante un ticket de salida.
+              </p>
+
+              <span class="block text-xs font-bold uppercase text-montano-secondary mt-3 mb-1">Distribución de los 7 minutos</span>
+              <ul contenteditable="true" data-field="p_tiempos" class="list-disc list-inside text-slate-700 space-y-1">
+                <li><strong>Minutos 1–4 (4 min):</strong> Muestra relámpago de los Mini-Murales, síntesis grupal en pizarra y retroalimentación docente.</li>
+                <li><strong>Minutos 5–7 (3 min):</strong> Llenado individual y entrega del Ticket de salida <em>«3-2-1 Comunicativo»</em>.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-xl border border-montano-border">
+              <span class="block text-xs font-bold uppercase text-montano-secondary mb-1">Instrucciones paso a paso</span>
+              <ol contenteditable="true" data-field="p_pasos" class="list-decimal list-inside text-slate-700 space-y-1.5 leading-relaxed">
+                <li><strong>Paso 1 (Socialización):</strong> Dos equipos voluntarios exhiben su Mini-Mural en la pizarra mientras el resto de la clase identifica los tres canales empleados (escrito, visual y gestual).</li>
+                <li><strong>Paso 2 (Conclusión colectiva):</strong> La docente guía la conclusión final: <em>«Todos los tipos de comunicación son valiosos; elegir el correcto nos ayuda a entendernos mejor y convivir con respeto»</em>.</li>
+                <li><strong>Paso 3 (Evaluación de salida):</strong> Cada alumno completa en 3 minutos su tarjeta de <strong>Ticket de salida</strong> respondiendo: <em>1)</em> Un ejemplo de comunicación verbal que usó hoy, <em>2)</em> Un mensaje no verbal que vio en clase y <em>3)</em> En qué situación del recreo aplicará lo aprendido.</li>
+              </ol>
+
+              <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span class="font-bold text-montano-primary block">Recursos:</span>
+                  <span contenteditable="true" data-field="p_recursos" class="text-slate-700">Mini-Murales elaborados, cinta adhesiva, pizarra y tarjetas impresas de Ticket de salida.</span>
+                </div>
+                <div>
+                  <span class="font-bold text-montano-primary block">Evidencia final:</span>
+                  <span contenteditable="true" data-field="p_evidencia" class="text-slate-700">Ticket de salida individual completado + Mini-Mural exhibido en el rincón comunicativo.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- 6. RECURSOS DIDÁCTICOS (AULA PRESENCIAL) -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2 mb-4">
+        <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+        6. Recursos Didácticos (Aula Presencial)
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+        <div class="p-3.5 rounded-xl bg-montano-surface border border-montano-border">
+          <span class="text-xs font-bold uppercase text-montano-secondary block mb-1">Material del Docente</span>
+          <ul contenteditable="true" data-field="rec_docente" class="list-disc list-inside text-slate-700 space-y-1">
+            <li>Pizarra acrílica y marcadores de colores.</li>
+            <li>4 tarjetas didácticas ilustradas (IM).</li>
+            <li>Tarjetas de casos comunicativos y tarjetas de roles (TC).</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-montano-surface border border-montano-border">
+          <span class="text-xs font-bold uppercase text-montano-secondary block mb-1">Material Impreso</span>
+          <ul contenteditable="true" data-field="rec_impreso" class="list-disc list-inside text-slate-700 space-y-1">
+            <li>Hoja de trabajo individual <em>«Detective de mensajes»</em>.</li>
+            <li>Tarjetas impresas de <em>Ticket de salida 3-2-1</em>.</li>
+            <li>Lista de cotejo de evaluación del docente.</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-montano-surface border border-montano-border">
+          <span class="text-xs font-bold uppercase text-montano-secondary block mb-1">Material Manipulativo</span>
+          <ul contenteditable="true" data-field="rec_manipulativo" class="list-disc list-inside text-slate-700 space-y-1">
+            <li>Cartulinas tamaño media carta (1 por equipo).</li>
+            <li>Crayones, marcadores gruesos y lápices.</li>
+            <li>Cinta adhesiva para exhibir en la galería del aula.</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-montano-surface border border-montano-border">
+          <span class="text-xs font-bold uppercase text-montano-secondary block mb-1">Material del Estudiante</span>
+          <ul contenteditable="true" data-field="rec_estudiante" class="list-disc list-inside text-slate-700 space-y-1">
+            <li>Cuaderno de Comunicación y Lenguaje.</li>
+            <li>Estuche escolar completo (lápiz, borrador, crayones).</li>
+            <li>Libro de texto institucional (consulta opcional).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. EVALUACIÓN DEL APRENDIZAJE (3 MOMENTOS) -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+          <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+          7. Evaluación del Aprendizaje (Inicial, Formativa y Sumativa)
+        </h2>
+        <span class="text-xs text-slate-600 font-medium">Sin porcentajes automáticos • Diferenciación de evidencias</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="rounded-xl border border-montano-border p-4 bg-montano-surface">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-montano-secondary text-white">1. Evaluación Inicial</span>
+            <span class="text-xs font-semibold text-montano-primary">Diagnóstica (IM)</span>
+          </div>
+          <p contenteditable="true" data-field="eval_inicial" class="text-slate-700 leading-relaxed">
+            <strong>Estrategia:</strong> Observación directa y preguntas generadoras durante la dinámica <em>«El mensaje misterioso sin palabras»</em>. Permite verificar si los alumnos distinguen entre hablar/escribir y comunicarse mediante gestos, sonidos o señales. <em>(Evidencia formativa diagnóstica, no calificada).</em>
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-montano-border p-4 bg-montano-surface">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-montano-primary text-white">2. Evaluación Formativa</span>
+            <span class="text-xs font-semibold text-montano-primary">Continua (TP y TC)</span>
+          </div>
+          <p contenteditable="true" data-field="eval_formativa" class="text-slate-700 leading-relaxed">
+            <strong>Estrategia:</strong> Monitoreo activo de la docente por los puestos durante el Trabajo Personal y acompañamiento a cada equipo en el Trabajo Cooperativo, verificando el cumplimiento de roles y brindando retroalimentación inmediata. Incluye el <em>Ticket de salida</em> como verificación formativa final.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-montano-border p-4 bg-montano-surface">
+          <div class="flex items-center justify-between mb-2">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-montano-accent text-montano-primary">3. Evaluación Sumativa</span>
+            <span class="text-xs font-semibold text-montano-primary">Calificada (TC / P)</span>
+          </div>
+          <p contenteditable="true" data-field="eval_sumativa" class="text-slate-700 leading-relaxed">
+            <strong>Actividad calificada:</strong> Valoración del producto <em>«Mini-Mural Comunicativo»</em> y su sustentación en plenaria mediante lista de cotejo institucional. <strong>Oportunidad de mejora:</strong> Si un canal del mural resulta confuso para el equipo vecino, el grupo dispone de espacio para ajustar el símbolo o texto antes de exhibirlo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. INSTRUMENTO DE EVALUACIÓN INTERACTIVO (LISTA DE COTEJO CALCULABLE) -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2">
+            <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+            8. Instrumento de Evaluación: Lista de Cotejo Interactiva
+          </h2>
+          <p class="text-xs text-slate-600 mt-0.5">Selecciona el nivel alcanzado en cada criterio para calcular el resultado y generar retroalimentación.</p>
+        </div>
+
+        <button type="button" onclick="addChecklistRow()" class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-montano-surface border border-montano-secondary text-montano-primary hover:bg-montano-secondary hover:text-white transition cursor-pointer self-start">
+          + Agregar criterio
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-montano-border">
+        <table class="w-full text-left border-collapse text-sm" id="checklistTable">
+          <thead>
+            <tr class="bg-montano-primary text-white text-xs uppercase tracking-wider">
+              <th class="p-3 w-10 text-center">#</th>
+              <th class="p-3">Criterio de Evaluación (Alineado a competencia y logro)</th>
+              <th class="p-3 text-center w-28">Logrado (2 pts)</th>
+              <th class="p-3 text-center w-32">En proceso (1 pt)</th>
+              <th class="p-3 text-center w-28">Por mejorar (0)</th>
+              <th class="p-3 text-center w-14 no-print">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-montano-border bg-white" id="checklistBody">
+            <tr data-row="0">
+              <td class="p-3 text-center font-bold text-montano-primary">1</td>
+              <td class="p-3"><div contenteditable="true" data-field="crit_0" class="px-1">Diferencia correctamente entre comunicación verbal (oral/escrita) y no verbal (gestual, visual y sonora) en los casos analizados.</div></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_0" value="2" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_0" value="1" onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_0" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+              <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+            </tr>
+            <tr data-row="1">
+              <td class="p-3 text-center font-bold text-montano-primary">2</td>
+              <td class="p-3"><div contenteditable="true" data-field="crit_1" class="px-1">Adapta el mensaje escrito, visual y gestual al contexto y al receptor del reto comunicativo asignado.</div></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_1" value="2" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_1" value="1" onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_1" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+              <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+            </tr>
+            <tr data-row="2">
+              <td class="p-3 text-center font-bold text-montano-primary">3</td>
+              <td class="p-3"><div contenteditable="true" data-field="crit_2" class="px-1">Elabora su señal individual y el Mini-Mural con limpieza, claridad visual y ortografía adecuada para tercero primaria.</div></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_2" value="2" onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_2" value="1" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_2" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+              <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+            </tr>
+            <tr data-row="3">
+              <td class="p-3 text-center font-bold text-montano-primary">4</td>
+              <td class="p-3"><div contenteditable="true" data-field="crit_3" class="px-1">Cumple responsablemente el rol asignado por el docente dentro del equipo sin excluir a ningún integrante.</div></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_3" value="2" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_3" value="1" onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_3" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+              <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+            </tr>
+            <tr data-row="4">
+              <td class="p-3 text-center font-bold text-montano-primary">5</td>
+              <td class="p-3"><div contenteditable="true" data-field="crit_4" class="px-1">Practica los hábitos formativos Montano escuchando con respeto antes de responder y aportando soluciones en sinergia.</div></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_4" value="2" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_4" value="1" onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+              <td class="p-3 text-center"><input type="radio" name="crit_score_4" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+              <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Panel de Resultados Calculados y Retroalimentación -->
+      <div class="mt-4 rounded-xl bg-montano-surface border border-montano-border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="px-4 py-2 rounded-xl bg-montano-primary text-white">
+            <span class="block text-[11px] uppercase tracking-wider text-blue-100">Puntaje Obtenido</span>
+            <span class="text-lg font-extrabold" id="scoreSummary">9 / 10 pts</span>
+          </div>
+          <div class="px-4 py-2 rounded-xl bg-montano-accent text-montano-primary">
+            <span class="block text-[11px] uppercase tracking-wider font-bold">Nivel de Logro</span>
+            <span class="text-lg font-extrabold" id="levelSummary">Logro Destacado</span>
+          </div>
+        </div>
+
+        <div class="flex-1 text-xs sm:text-sm text-slate-700 bg-white p-3 rounded-xl border border-montano-border">
+          <span class="font-bold text-montano-primary block mb-0.5">Retroalimentación y Oportunidad de Mejora Sugerida:</span>
+          <p id="feedbackSuggestion" contenteditable="true" data-field="retroalimentacion_auto">
+            Excelente aplicación de los tipos de comunicación y trabajo sinérgico. Como oportunidad de mejora, revisar la limpieza visual y el tamaño de letra del cartel para que sea legible a distancia.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. OBSERVACIONES Y REFLEXIÓN DOCENTE -->
+    <section class="card-section bg-white rounded-2xl shadow-sm border border-montano-border p-6">
+      <h2 class="text-base font-bold uppercase tracking-wider text-montano-primary flex items-center gap-2 mb-4">
+        <span class="w-2 h-5 rounded bg-montano-accent inline-block"></span>
+        9. Observaciones y Reflexión Docente
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <label class="block text-xs font-bold uppercase text-montano-primary mb-2">Fortalezas observadas en la sesión</label>
+          <div contenteditable="true" data-field="obs_fortalezas" class="min-h-[84px] bg-white p-2.5 rounded-lg border border-montano-border text-slate-700 leading-relaxed">
+            Alta motivación durante la dinámica inicial sin palabras; los estudiantes identificaron con rapidez señales visuales y gestuales de su entorno escolar.
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <label class="block text-xs font-bold uppercase text-montano-secondary mb-2">Dificultades detectadas y ajustes</label>
+          <div contenteditable="true" data-field="obs_dificultades" class="min-h-[84px] bg-white p-2.5 rounded-lg border border-montano-border text-slate-700 leading-relaxed">
+            Algunos equipos emplearon más tiempo en ilustrar que en acordar el gesto escénico; recordar el aviso de tiempo en el minuto 10 del Trabajo Cooperativo.
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-montano-border bg-montano-surface p-4">
+          <label class="block text-xs font-bold uppercase text-slate-700 mb-2">Seguimiento o apoyo personalizado</label>
+          <div contenteditable="true" data-field="obs_seguimiento" class="min-h-[84px] bg-white p-2.5 rounded-lg border border-montano-border text-slate-700 leading-relaxed">
+            Acompañar de cerca la redacción breve de mensajes escritos en estudiantes que requieren refuerzo en segmentación de palabras.
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de firma institucional -->
+      <div class="mt-6 pt-4 border-t border-montano-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div>
+          <strong class="text-montano-primary">Colegio Montano</strong> • Modelo Pedagógico por Competencias • Planificación Diaria Presencial
+        </div>
+        <div class="flex items-center gap-6">
+          <span>Firma Docente: ________________________</span>
+          <span>Vo. Bo. Coordinación: ________________________</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE CONFIRMACIÓN PARA REINICIAR (Sin usar confirm() ni alert()) -->
+  <div id="resetModal" class="no-print fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-montano-border">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="w-10 h-10 rounded-xl bg-montano-accent text-montano-primary flex items-center justify-center font-extrabold text-lg">!</span>
+        <h3 class="text-lg font-bold text-montano-primary">Restablecer planificación</h3>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-5">
+        ¿Deseas restaurar todos los campos editables y la lista de cotejo a los valores originales de la clase de Comunicación y Lenguaje (3.° Primaria)? Se borrarán los cambios guardados en este navegador.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer">
+          Cancelar
+        </button>
+        <button type="button" onclick="confirmReset()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-montano-primary text-white hover:bg-montano-secondary cursor-pointer">
+          Sí, restablecer todo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIÓN FLOTANTE (Toast) -->
+  <div id="toastBanner" class="no-print fixed bottom-5 right-5 z-50 hidden items-center gap-2 px-4 py-3 rounded-xl bg-montano-primary text-white text-sm font-semibold shadow-lg border-l-4 border-montano-accent">
+    <span id="toastMessage">Planificación guardada correctamente.</span>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'colegio_montano_plan_diario_v1';
+    let initialHTMLSnapshot = '';
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      initialHTMLSnapshot = document.getElementById('planDocument').innerHTML;
+      loadFromStorage();
+      bindEditableListeners();
+      calculateChecklist();
+    });
+
+    // Navegación entre momentos didácticos IM - TP - TC - P
+    function selectMoment(momentKey) {
+      const moments = ['IM', 'TP', 'TC', 'P'];
+      const tabs = ['IM', 'TP', 'TC', 'P', 'ALL'];
+
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-' + t);
+        if (btn) btn.classList.remove('active');
+      });
+
+      const activeBtn = document.getElementById('tab-' + momentKey);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      moments.forEach(m => {
+        const panel = document.getElementById('panel-' + m);
+        if (!panel) return;
+        if (momentKey === 'ALL' || momentKey === m) {
+          panel.classList.remove('hidden');
+        } else {
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
+    // Cálculo dinámico de la Lista de Cotejo
+    function calculateChecklist() {
+      const rows = document.querySelectorAll('#checklistBody tr');
+      let totalScore = 0;
+      const maxScore = rows.length * 2;
+
+      rows.forEach((row, index) => {
+        row.querySelector('td:first-child').textContent = index + 1;
+        const checkedRadio = row.querySelector('input[type="radio"]:checked');
+        if (checkedRadio) {
+          totalScore += parseInt(checkedRadio.value, 10);
+        }
+      });
+
+      const scoreEl = document.getElementById('scoreSummary');
+      const levelEl = document.getElementById('levelSummary');
+      const feedbackEl = document.getElementById('feedbackSuggestion');
+
+      if (scoreEl) scoreEl.textContent = `${totalScore} / ${maxScore} pts`;
+
+      const ratio = maxScore > 0 ? totalScore / maxScore : 0;
+      let levelText = 'En Inicio';
+      let feedbackText = 'Reforzar la identificación de mensajes verbales y no verbales mediante ejemplos guiados y brindar oportunidad de reelaborar el Mini-Mural con apoyo del equipo.';
+
+      if (ratio >= 0.85) {
+        levelText = 'Logro Destacado';
+        feedbackText = 'Excelente dominio y aplicación de los tipos de comunicación en situaciones cotidianas, evidenciando sinergia y respeto de roles en equipo.';
+      } else if (ratio >= 0.65) {
+        levelText = 'Logro Alcanzado';
+        feedbackText = 'Comprende y aplica adecuadamente la comunicación verbal y no verbal. Como oportunidad de mejora, fortalecer la claridad visual o precisión escrita en uno de los canales del mural.';
+      } else if (ratio >= 0.4) {
+        levelText = 'En Proceso';
+        feedbackText = 'Identifica formas básicas de comunicación, pero requiere acompañamiento para adaptar el mensaje al contexto. Oportunidad de mejora: revisar junto al equipo el símbolo creado.';
+      }
+
+      if (levelEl) levelEl.textContent = levelText;
+      if (feedbackEl && !feedbackEl.dataset.userEdited) {
+        feedbackEl.textContent = feedbackText;
+      }
+
+      saveToStorage(false);
+    }
+
+    // Agregar criterio nuevo a la lista de cotejo
+    function addChecklistRow() {
+      const tbody = document.getElementById('checklistBody');
+      const newIndex = tbody.querySelectorAll('tr').length;
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-row', newIndex);
+      tr.innerHTML = `
+        <td class="p-3 text-center font-bold text-montano-primary">${newIndex + 1}</td>
+        <td class="p-3"><div contenteditable="true" data-field="crit_${newIndex}" class="px-1">Nuevo criterio observable y medible alineado al logro de aprendizaje.</div></td>
+        <td class="p-3 text-center"><input type="radio" name="crit_score_${newIndex}" value="2" checked onchange="calculateChecklist()" class="w-4 h-4 accent-[#1F3C88] cursor-pointer"></td>
+        <td class="p-3 text-center"><input type="radio" name="crit_score_${newIndex}" value="1" onchange="calculateChecklist()" class="w-4 h-4 accent-[#3F72AF] cursor-pointer"></td>
+        <td class="p-3 text-center"><input type="radio" name="crit_score_${newIndex}" value="0" onchange="calculateChecklist()" class="w-4 h-4 accent-slate-600 cursor-pointer"></td>
+        <td class="p-3 text-center no-print"><button type="button" onclick="removeChecklistRow(this)" class="text-xs text-slate-400 hover:text-red-600 font-bold cursor-pointer" title="Eliminar fila">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+      bindEditableListeners();
+      calculateChecklist();
+      showToast('Nuevo criterio agregado a la lista de cotejo.');
+    }
+
+    // Eliminar criterio de la lista de cotejo
+    function removeChecklistRow(button) {
+      const tbody = document.getElementById('checklistBody');
+      if (tbody.querySelectorAll('tr').length <= 1) {
+        showToast('Debe mantenerse al menos un criterio de evaluación.');
+        return;
+      }
+      button.closest('tr').remove();
+      calculateChecklist();
+    }
+
+    // Vincular eventos de auto-guardado en campos editables y checkboxes
+    function bindEditableListeners() {
+      document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+        if (el.dataset.bound) return;
+        el.dataset.bound = 'true';
+        el.addEventListener('input', () => {
+          if (el.id === 'feedbackSuggestion') {
+            el.dataset.userEdited = 'true';
+          }
+          saveToStorage(false);
+        });
+      });
+
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.dataset.bound) return;
+        cb.dataset.bound = 'true';
+        cb.addEventListener('change', () => saveToStorage(false));
+      });
+    }
+
+    // Guardar estado completo en localStorage
+    function saveToStorage(notify = false) {
+      try {
+        const fields = {};
+        document.querySelectorAll('[data-field]').forEach(el => {
+          fields[el.getAttribute('data-field')] = el.innerHTML;
+        });
+
+        const checks = {};
+        document.querySelectorAll('input[type="checkbox"][data-check]').forEach(cb => {
+          checks[cb.getAttribute('data-check')] = cb.checked;
+        });
+
+        const checklistHTML = document.getElementById('checklistBody').innerHTML;
+        const radioStates = [];
+        document.querySelectorAll('#checklistBody tr').forEach(row => {
+          const checked = row.querySelector('input[type="radio"]:checked');
+          radioStates.push(checked ? checked.value : '2');
+        });
+
+        const payload = {
+          fields,
+          checks,
+          checklistHTML,
+          radioStates,
+          updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+        const statusText = document.getElementById('saveStatusText');
+        if (statusText) {
+          statusText.textContent = `Guardado automático (${payload.updatedAt})`;
+        }
+
+        if (notify) {
+          showToast('Planificación guardada en el navegador.');
+        }
+      } catch (e) {
+        console.warn('No se pudo acceder a localStorage:', e);
+      }
+    }
+
+    function manualSave() {
+      saveToStorage(true);
+    }
+
+    // Cargar estado desde localStorage
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+
+        if (data.checklistHTML) {
+          document.getElementById('checklistBody').innerHTML = data.checklistHTML;
+        }
+
+        if (Array.isArray(data.radioStates)) {
+          const rows = document.querySelectorAll('#checklistBody tr');
+          rows.forEach((row, idx) => {
+            const val = data.radioStates[idx];
+            if (val !== undefined) {
+              const targetRadio = row.querySelector(`input[type="radio"][value="${val}"]`);
+              if (targetRadio) targetRadio.checked = true;
+            }
+          });
+        }
+
+        if (data.fields) {
+          Object.entries(data.fields).forEach(([key, val]) => {
+            const el = document.querySelector(`[data-field="${key}"]`);
+            if (el) el.innerHTML = val;
+          });
+        }
+
+        if (data.checks) {
+          Object.entries(data.checks).forEach(([key, isChecked]) => {
+            const cb = document.querySelector(`input[type="checkbox"][data-check="${key}"]`);
+            if (cb) cb.checked = isChecked;
+          });
+        }
+      } catch (e) {
+        console.warn('Error al cargar datos guardados:', e);
+      }
+    }
+
+    // Exportar archivo HTML autónomo con las ediciones actuales incluidas
+    function exportHTML() {
+      // Sincronizar estado de inputs antes de clonar el DOM
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) cb.setAttribute('checked', 'checked');
+        else cb.removeAttribute('checked');
+      });
+
+      document.querySelectorAll('input[type="radio"]').forEach(rb => {
+        if (rb.checked) rb.setAttribute('checked', 'checked');
+        else rb.removeAttribute('checked');
+      });
+
+      const materia = (document.querySelector('[data-field="materia"]')?.textContent || 'Clase').trim().replace(/\s+/g, '_');
+      const planNum = (document.querySelector('[data-field="planNum"]')?.textContent || '1').trim();
+      const fileName = `Plan_Montano_${materia}_Plan${planNum}.html`;
+
+      const fullHTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`Archivo "${fileName}" descargado.`);
+    }
+
+    // Modal de reinicio con confirmación
+    function openResetModal() {
+      const modal = document.getElementById('resetModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('resetModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmReset() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('planDocument').innerHTML = initialHTMLSnapshot;
+      bindEditableListeners();
+      selectMoment('IM');
+      calculateChecklist();
+      closeResetModal();
+      showToast('Planificación restablecida a los valores iniciales.');
+    }
+
+    // Mensaje flotante discreto
+    let toastTimer;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
